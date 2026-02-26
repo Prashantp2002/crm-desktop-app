@@ -1,8 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import AdminDashboard from "./pages/AdminDashboard";
-import SalesDashboard from "./pages/SalesDashboard";
 import Dashboard from "./pages/Dashboard";
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -19,22 +17,22 @@ function App() {
           path="/admin-dashboard"
           element={
             <PrivateRoute>
-              <AdminDashboard />
+              <Dashboard />
             </PrivateRoute>
           }
         />
 
         <Route
-          path="/sales-dashboard"
+          path="/employee-dashboard"
           element={
             <PrivateRoute>
-              <SalesDashboard />
+              <Dashboard />
             </PrivateRoute>
           }
         />
 
         <Route
-          path="/dashboard"
+          path="/client-dashboard"
           element={
             <PrivateRoute>
               <Dashboard />

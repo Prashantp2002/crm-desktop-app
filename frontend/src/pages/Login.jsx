@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./login.css";
-import logo from "../assets/logo.png"; // place logo.png inside src/assets/
+import logo from "../assets/logo.png";
+import { loginUser } from "../api/auth";
 
 function Login() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     role: "",
     username: "",
@@ -12,6 +15,7 @@ function Login() {
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -20,7 +24,7 @@ function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     let newErrors = {};
@@ -40,14 +44,50 @@ function Login() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log("Form Submitted:", formData);
-      // TODO: connect backend login API here
+      try {
+        setLoading(true);
+
+        const response = await loginUser({
+          username: formData.username, // can be email also
+          password: formData.password,
+        });
+
+        const { token, role, username } = response.data;
+
+        // Validate role
+        if (role !== formData.role) {
+          alert("Selected role does not match your account role.");
+          setLoading(false);
+          return;
+        }
+
+        // Store token
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", role);
+        localStorage.setItem("username", username);
+
+        alert("Login successful!");
+
+        // Redirect based on role
+        if (role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (role === "employee") {
+          navigate("/employee-dashboard");
+        } else if (role === "client") {
+          navigate("/client-dashboard");
+        }
+
+      } catch (error) {
+        alert(error.response?.data?.error || "Login failed");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   return (
     <div className="login-wrapper">
-      {/* Logo Section */}
+      {/* Logo */}
       <div className="logo">
         <img src={logo} alt="DigitalDose Logo" />
         <div className="logo-text">
@@ -56,9 +96,8 @@ function Login() {
         </div>
       </div>
 
-      {/* Login Form */}
       <form onSubmit={handleSubmit} noValidate>
-        {/* Account Type */}
+        {/* Role */}
         <div className="form-group">
           <label>Account Type</label>
           <select
@@ -68,13 +107,13 @@ function Login() {
           >
             <option value="">Select Account Type</option>
             <option value="admin">Administration</option>
-            <option value="staff">Staff</option>
             <option value="employee">Employee</option>
+            <option value="client">Client</option>
           </select>
           {errors.role && <div className="error">{errors.role}</div>}
         </div>
 
-        {/* Username */}
+        {/* Username or Email */}
         <div className="form-group">
           <label>Username or Email</label>
           <input
@@ -109,14 +148,14 @@ function Login() {
           {errors.password && <div className="error">{errors.password}</div>}
         </div>
 
-        {/* Actions */}
         <div className="actions">
-          <button type="submit" className="btn-login">
-            LOGIN
+          <button type="submit" className="btn-login" disabled={loading}>
+            {loading ? "Logging in..." : "LOGIN"}
           </button>
-          <a className="forgot" href="#">
+
+          <Link to="/forgot-password" className="forgot">
             Forgot Password?
-          </a>
+          </Link>
         </div>
 
         <div className="signup-link">

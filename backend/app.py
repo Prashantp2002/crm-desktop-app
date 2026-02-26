@@ -1,25 +1,29 @@
 from flask import Flask
 from flask_cors import CORS
 from config import Config
-from extensions import db
+from extensions import db, bcrypt, jwt
+from routes.auth import auth_bp
 
-app = Flask(__name__)
-app.config.from_object(Config)
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-CORS(app)
-db.init_app(app)
+    # ✅ ENABLE CORS (THIS WAS MISSING)
+    CORS(app)
 
-# Import models
-from models.role import Role
-from models.user import User
-from models.lead import Lead
+    db.init_app(app)
+    bcrypt.init_app(app)
+    jwt.init_app(app)
 
-with app.app_context():
-    db.create_all()
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
-@app.route("/")
-def home():
-    return {"message": "CRM Backend Running 🚀"}
+    @app.route("/")
+    def home():
+        return {"message": "Backend API is running successfully"}
+
+    return app
+
+app = create_app()
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(debug=True)

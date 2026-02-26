@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import "./signup.css";
-import logo from "../assets/logo.png"; // ensure logo exists in src/assets/
+import logo from "../assets/logo.png";
+import { registerUser } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 function Signup() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     fullname: "",
     phone: "",
@@ -14,44 +18,53 @@ function Signup() {
 
   const [errors, setErrors] = useState({});
   const [suggestion, setSuggestion] = useState("");
+  const [isUsernameAuto, setIsUsernameAuto] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Handle input change
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    if (name === "username") {
+      setIsUsernameAuto(false);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   // Auto Username Suggestion
   useEffect(() => {
-    if (!formData.role || !formData.fullname) {
+    if (!formData.role || !formData.fullname || !isUsernameAuto) {
       setSuggestion("");
       return;
     }
 
-    const name = formData.fullname
+    const cleanName = formData.fullname
       .trim()
       .toLowerCase()
       .replace(/\s+/g, "");
 
     let prefix = "";
 
+    // ✅ FIXED (lowercase match)
     switch (formData.role) {
       case "admin":
         prefix = "admin_";
         break;
-      case "sales":
-        prefix = "sales_";
+      case "employee":
+        prefix = "employee_";
         break;
-      case "agent":
-        prefix = "agent_";
+      case "client":
+        prefix = "client_";
         break;
       default:
         prefix = "";
     }
 
-    const suggested = prefix + name;
+    const suggested = prefix + cleanName;
 
     setSuggestion("Suggested: " + suggested);
 
@@ -59,10 +72,10 @@ function Signup() {
       ...prev,
       username: suggested,
     }));
-  }, [formData.role, formData.fullname]);
+  }, [formData.role, formData.fullname, isUsernameAuto]);
 
-  // Validation
-  const handleSubmit = (e) => {
+  // Submit
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     let newErrors = {};
@@ -75,8 +88,8 @@ function Signup() {
       newErrors.phone = "Enter valid 10 digit phone number";
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email required";
+    if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = "Enter valid email address";
     }
 
     if (!formData.role) {
@@ -87,21 +100,43 @@ function Signup() {
       newErrors.username = "Username required";
     }
 
-    if (!formData.password.trim()) {
-      newErrors.password = "Password required";
+    if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log("Signup Data:", formData);
-      // TODO: connect backend API here
+      try {
+        setLoading(true);
+
+        const response = await registerUser(formData);
+
+        alert(response.data.message);
+
+        // Reset form
+        setFormData({
+          fullname: "",
+          phone: "",
+          email: "",
+          role: "",
+          username: "",
+          password: "",
+        });
+
+        navigate("/");
+
+      } catch (error) {
+        alert(error.response?.data?.error || "Signup failed");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   return (
     <div className="login-card">
-      {/* Logo Section */}
+      {/* Logo */}
       <div className="logo">
         <img src={logo} alt="DigitalDose Logo" className="logo-img" />
         <div className="logo-text">
@@ -147,7 +182,7 @@ function Signup() {
           {errors.email && <div className="error">{errors.email}</div>}
         </div>
 
-        {/* Account Type */}
+        {/* Role */}
         <div className="form-group">
           <label>Account Type</label>
           <select
@@ -157,8 +192,8 @@ function Signup() {
           >
             <option value="">Select Role</option>
             <option value="admin">Administration</option>
-            <option value="sales">Staff</option>
-            <option value="agent">Employee</option>
+            <option value="employee">Employee</option>
+            <option value="client">Client</option>
           </select>
           {errors.role && <div className="error">{errors.role}</div>}
         </div>
@@ -189,8 +224,8 @@ function Signup() {
           {errors.password && <div className="error">{errors.password}</div>}
         </div>
 
-        <button type="submit" className="login-btn">
-          SUBMIT
+        <button type="submit" className="login-btn" disabled={loading}>
+          {loading ? "Creating Account..." : "SUBMIT"}
         </button>
       </form>
     </div>

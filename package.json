@@ -1,0 +1,12 @@
+{
+  "name": "crm-desktop-app",
+  "version": "1.0.0",
+  "description": "CRM Desktop Application",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^40.6.0"
+  }
+}

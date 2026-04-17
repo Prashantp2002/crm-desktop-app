@@ -11,3 +11,5 @@ from .meetings  import Meeting
 from .opportunity import Opportunity 
 from .team         import Team  
 from .call         import Call
+from .email_account import EmailAccount
+from .email_message import EmailMessage

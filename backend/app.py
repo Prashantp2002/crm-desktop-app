@@ -1,3 +1,7 @@
+import os
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  
+
+
 from flask import Flask, request, Response
 from flask_cors import CORS
 from config import Config
@@ -15,9 +19,11 @@ from routes.teams import teams_bp
 from routes.calls import calls_bp
 from routes.calendar import calendar_bp
 from routes.meetings import meetings_bp
+from routes.email import email_bp
 
 def create_app():
     app = Flask(__name__)
+    app.secret_key = "super-secret-key-123"
     app.config.from_object(Config)
 
     CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
@@ -57,6 +63,7 @@ def create_app():
     app.register_blueprint(calls_bp,         url_prefix="/api")
     app.register_blueprint(calendar_bp,      url_prefix="/api")
     app.register_blueprint(meetings_bp,      url_prefix="/api")
+    app.register_blueprint(email_bp, url_prefix="/api")
 
     @app.route("/")
     def home():
@@ -68,3 +75,4 @@ app = create_app()
 
 if __name__ == "__main__":
     app.run(debug=True)
+

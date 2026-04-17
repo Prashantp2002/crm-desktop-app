@@ -31,6 +31,7 @@ import CreateMeeting  from "./components/meetings/CreateMeeting";
 import Tasks      from "./pages/Tasks";
 import TaskDetail  from "./components/tasks/TaskDetail";
 import CreateTask  from "./components/tasks/CreateTask";
+import Emails from "./pages/Emails";
 
 import "./styles/dashboard.css";
 
@@ -80,6 +81,7 @@ function App() {
 <Route path="/tasks"         element={<Tasks />} />
 <Route path="/tasks/create"  element={<CreateTask />} />
 <Route path="/tasks/:id"     element={<TaskDetail />} />
+<Route path="/emails" element={<Emails />} />
           </Route>
         </Route>
 
